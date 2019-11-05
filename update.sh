@@ -3,9 +3,7 @@ set -Eeuo pipefail
 
 # see https://www.redmine.org/projects/redmine/wiki/redmineinstall
 defaultRubyVersion='2.6'
-declare -A rubyVersions=(
-	[3.4]='2.4'
-)
+declare -A rubyVersions=()
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
@@ -15,15 +13,15 @@ if [ ${#versions[@]} -eq 0 ]; then
 fi
 versions=( "${versions[@]%/}" )
 
-relasesUrl='https://www.redmine.org/releases'
-versionsPage="$(wget -qO- "$relasesUrl")"
+relasesUrl='https://github.com/redmica/redmica/archive'
+versionsPage="$(wget -qO- 'https://github.com/redmica/redmica/releases')"
 
 passenger="$(wget -qO- 'https://rubygems.org/api/v1/gems/passenger.json' | sed -r 's/^.*"version":"([^"]+)".*$/\1/')"
 
 travisEnv=
 for version in "${versions[@]}"; do
-	fullVersion="$(echo $versionsPage | sed -r "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/" | sort -V | tail -1)"
-	md5="$(wget -qO- "$relasesUrl/redmine-$fullVersion.tar.gz.md5" | cut -d' ' -f1)"
+	fullVersion="$(echo $versionsPage | sed -nr "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/p" | sort -V | tail -1)"
+	md5="$(wget -qO- "$relasesUrl/v$fullVersion.tar.gz" | md5sum | cut -d' ' -f1)"
 
 	rubyVersion="${rubyVersions[$version]:-$defaultRubyVersion}"
 
