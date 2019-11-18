@@ -20,7 +20,7 @@ passenger="$(wget -qO- 'https://rubygems.org/api/v1/gems/passenger.json' | sed -
 
 travisEnv=
 for version in "${versions[@]}"; do
-	fullVersion="$(echo $versionsPage | sed -nr "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/p" | sort -V | tail -1)"
+	fullVersion=$(echo "$versionsPage" | sed -nr "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/p" | sort -V | tail -1)
 	md5="$(wget -qO- "$relasesUrl/v$fullVersion.tar.gz" | md5sum | cut -d' ' -f1)"
 
 	rubyVersion="${rubyVersions[$version]:-$defaultRubyVersion}"
