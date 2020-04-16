@@ -38,11 +38,11 @@ RUN set -eux; \
 	chown redmine:redmine "$HOME"; \
 	chmod 1777 "$HOME"
 
-ENV REDMICA_VERSION %%REDMICA_VERSION%%
+ENV REDMICA_VERSION 1.0.1
 ENV REDMICA_DOWNLOAD_MD5 %%REDMICA_DOWNLOAD_MD5%%
 
 RUN set -eux; \
-	wget -O redmine.tar.gz "https://github.com/redmica/redmica/archive/v${REDMINE_VERSION}.tar.gz"; \
+	wget -O redmine.tar.gz "https://github.com/redmica/redmica/archive/v${REDMICA_VERSION}.tar.gz"; \
 	echo "$REDMINE_DOWNLOAD_MD5 *redmine.tar.gz" | md5sum -c -; \
 	tar -xf redmine.tar.gz --strip-components=1; \
 	rm redmine.tar.gz files/delete.me log/delete.me; \
