@@ -22,8 +22,9 @@ RUN set -eux; \
 		\
 # we need "gsfonts" for generating PNGs of Gantt charts
 # and "ghostscript" for creating PDF thumbnails (in 4.1+)
+		ghostscript \
 		ghostscript-fonts \
-		imagemagick6 \
+		imagemagick \
 	;
 
 ENV RAILS_ENV production
@@ -38,8 +39,8 @@ RUN set -eux; \
 	chown redmine:redmine "$HOME"; \
 	chmod 1777 "$HOME"
 
-ENV REDMINE_VERSION 1.0.1
-ENV REDMINE_DOWNLOAD_MD5 8ddd7b8698091d703ffb167da4eae82b
+ENV REDMINE_VERSION 1.0.2
+ENV REDMINE_DOWNLOAD_MD5 c7bea9071e3dbb19313919fb77de6dc5
 
 RUN set -eux; \
 	wget -O redmine.tar.gz "https://github.com/redmica/redmica/archive/v${REDMINE_VERSION}.tar.gz"; \
@@ -68,8 +69,6 @@ RUN set -eux; \
 		sqlite-dev \
 		ttf2ufm \
 		zlib-dev \
-# in 4.1+, imagemagick6-dev is no longer necessary/used: https://www.redmine.org/issues/30492
-		imagemagick6-dev \
 	; \
 	\
 	su-exec redmine bundle install --jobs "$(nproc)" --without development test; \
