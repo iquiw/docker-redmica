@@ -33,7 +33,7 @@ for version in "${versions[@]}"; do
 		-e 's/%%REDMINE_VERSION%%/'"$fullVersion"'/'
 		-e 's/%%RUBY_VERSION%%/'"$rubyVersion"'/'
 		-e 's/%%REDMINE_DOWNLOAD_MD5%%/'"$md5"'/'
-		-e 's/%%REDMINE%%/iquiw\/redmica:'"$fullVersion"'/'
+		-e 's/%%REDMINE%%/iquiw\/redmica:'"$version"'/'
 		-e 's/%%PASSENGER_VERSION%%/'"$passenger"'/'
 	)
 	alpineSedArgs=()

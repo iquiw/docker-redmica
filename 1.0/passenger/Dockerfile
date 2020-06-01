@@ -1,4 +1,4 @@
-FROM iquiw/redmica:1.0.2
+FROM iquiw/redmica:1.0
 
 ENV PASSENGER_VERSION 6.0.5
 
