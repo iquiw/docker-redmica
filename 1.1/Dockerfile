@@ -79,11 +79,11 @@ RUN set -eux; \
 	chmod 1777 "$HOME"
 
 ENV REDMINE_VERSION 1.1.1
-ENV REDMINE_DOWNLOAD_MD5 e35bbdf349e8f333fcef15cee25894ff
+ENV REDMINE_DOWNLOAD_SHA256 956cc8e66ec8a2558fa5836cf222ad857c56f8a05f66de59d07a80682ec67a0e
 
 RUN set -eux; \
 	wget -O redmine.tar.gz "https://github.com/redmica/redmica/archive/v${REDMINE_VERSION}.tar.gz"; \
-	echo "$REDMINE_DOWNLOAD_MD5 *redmine.tar.gz" | md5sum -c -; \
+	echo "$REDMINE_DOWNLOAD_SHA256 *redmine.tar.gz" | sha256sum -c -; \
 	tar -xf redmine.tar.gz --strip-components=1; \
 	rm redmine.tar.gz files/delete.me log/delete.me; \
 	mkdir -p log public/plugin_assets sqlite tmp/pdf tmp/pids; \
