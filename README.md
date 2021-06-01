@@ -6,9 +6,9 @@ This is the Git repo of [RedMica](https://github.com/redmica/redmica) Docker ima
 
 Supported tags. Note that `latest` tag does not exist.
 
-* `1.2.1`, `1.2`
-* `1.2.1-alpine`, `1.2-alpine`
-* `1.2.1-passenger`, `1.2-passenger`
+* `1.2.2`, `1.2`
+* `1.2.2-alpine`, `1.2-alpine`
+* `1.2.2-passenger`, `1.2-passenger`
 * `1.1.1`, `1.1`
 * `1.1.1-alpine`, `1.1-alpine`
 * `1.1.1-passenger`, `1.1-passenger`
