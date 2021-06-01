@@ -54,6 +54,8 @@ RUN set -eux; \
 	chmod -R ugo=rwX config db sqlite; \
 	find log tmp -type d -exec chmod 1777 '{}' +
 
+# build for musl-libc, not glibc (see https://github.com/sparklemotion/nokogiri/issues/2075, https://github.com/rubygems/rubygems/issues/3174)
+ENV BUNDLE_FORCE_RUBY_PLATFORM 1
 RUN set -eux; \
 	\
 	apk add --no-cache --virtual .build-deps \
@@ -72,13 +74,15 @@ RUN set -eux; \
 		imagemagick-dev \
 	; \
 	\
-	su-exec redmine bundle install --jobs "$(nproc)" --without development test; \
+	su-exec redmine bundle config --local without 'development test'; \
+# fill up "database.yml" with bogus entries so the redmine Gemfile will pre-install all database adapter dependencies
+# https://github.com/redmine/redmine/blob/e9f9767089a4e3efbd73c35fc55c5c7eb85dd7d3/Gemfile#L50-L79
+	echo '# the following entries only exist to force `bundle install` to pre-install all database adapter dependencies -- they can be safely removed/ignored' > ./config/database.yml; \
 	for adapter in mysql2 postgresql sqlserver sqlite3; do \
-		echo "$RAILS_ENV:" > ./config/database.yml; \
+		echo "$adapter:" >> ./config/database.yml; \
 		echo "  adapter: $adapter" >> ./config/database.yml; \
-		su-exec redmine bundle install --jobs "$(nproc)" --without development test; \
-		cp Gemfile.lock "Gemfile.lock.${adapter}"; \
 	done; \
+	su-exec redmine bundle install --jobs "$(nproc)"; \
 	rm ./config/database.yml; \
 # fix permissions for running as an arbitrary user
 	chmod -R ugo=rwX Gemfile.lock "$GEM_HOME"; \
@@ -89,14 +93,10 @@ RUN set -eux; \
 	rm /usr/local/bundle/gems/rbpdf-font-1.19.*/lib/fonts/ttf2ufm/ttf2ufm; \
 	\
 	runDeps="$( \
-		find /usr/local -type f -executable -exec ldd '{}' ';' \
-			| awk '/=>/ { print $(NF-1) }' \
-			| sort -u \
-			| grep -v '^/usr/local/' \
-			| xargs -rn1 basename \
-			| grep -v 'ld-musl-' \
-			| sed -e 's/^/so:/' \
-			| sort -u \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/bundle/gems \
+		| tr ',' '\n' \
+		| sort -u \
+		| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)"; \
 	apk add --no-network --virtual .redmine-rundeps $runDeps; \
 	apk del --no-network .build-deps

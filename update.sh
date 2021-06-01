@@ -2,9 +2,10 @@
 set -Eeuo pipefail
 
 # see https://www.redmine.org/projects/redmine/wiki/redmineinstall
-defaultRubyVersion='2.6'
+defaultRubyVersion='2.7'
 declare -A rubyVersions=(
-	[1.2]='2.7'
+	[1.0]='2.6'
+	[1.1]='2.6'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -16,13 +17,13 @@ fi
 versions=( "${versions[@]%/}" )
 
 relasesUrl='https://github.com/redmica/redmica/archive'
-versionsPage="$(wget -qO- 'https://github.com/redmica/redmica/releases')"
+versionsPage="$(curl -fsSL 'https://github.com/redmica/redmica/releases')"
 
-passenger="$(wget -qO- 'https://rubygems.org/api/v1/gems/passenger.json' | sed -r 's/^.*"version":"([^"]+)".*$/\1/')"
+passenger="$(curl -fsSL 'https://rubygems.org/api/v1/gems/passenger.json' | sed -r 's/^.*"version":"([^"]+)".*$/\1/')"
 
 for version in "${versions[@]}"; do
-	fullVersion=$(echo "$versionsPage" | sed -nr "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/p" | sort -V | tail -1)
-	sha256="$(wget -qO- "$relasesUrl/v$fullVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
+	fullVersion=$(sed <<<"$versionsPage" -nr "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/p" | sort -V | tail -1)
+	sha256="$(curl -fsSL "$relasesUrl/v$fullVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
 
 	rubyVersion="${rubyVersions[$version]:-$defaultRubyVersion}"
 
@@ -44,6 +45,7 @@ for version in "${versions[@]}"; do
 	if [ "$version" = 4.0 ]; then
 		commonSedArgs+=(
 			-e '/ghostscript /d'
+			-e '\!ImageMagick-6/policy\.xml!d'
 		)
 		alpineSedArgs+=(
 			-e 's/imagemagick/imagemagick6/g'
@@ -56,6 +58,7 @@ for version in "${versions[@]}"; do
 		)
 	fi
 
+	mkdir -p "$version"
 	cp docker-entrypoint.sh "$version/"
 	sed "${commonSedArgs[@]}" Dockerfile-debian.template > "$version/Dockerfile"
 

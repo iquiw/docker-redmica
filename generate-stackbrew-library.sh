@@ -2,7 +2,7 @@
 set -eu
 
 declare -A aliases=(
-	[4.1]='4 latest'
+	[4.2]='4 latest'
 )
 
 self="$(basename "$BASH_SOURCE")"
@@ -80,6 +80,9 @@ for version in "${versions[@]}"; do
 
 	parent="$(awk 'toupper($1) == "FROM" { print $2 }' "$version/Dockerfile")"
 	arches="${parentRepoToArches[$parent]}"
+
+	# the "gosu" Debian package isn't available on mips64le
+	arches="$(sed <<<" $arches " -e 's/ mips64le / /g')"
 
 	echo
 	cat <<-EOE
