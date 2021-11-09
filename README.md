@@ -6,8 +6,11 @@
 
 This is the Git repo of [RedMica](https://github.com/redmica/redmica) Docker image, derived from [Docker "Official Image"](https://github.com/docker-library/official-images#what-are-official-images) for [`redmine`](https://hub.docker.com/_/redmine/).
 
-Supported tags. Note that `latest` tag does not exist.
+Supported tags.
 
+* `2.0.0`, `2.0`, `latest`
+* `2.0.0-alpine`, `2.0-alpine`
+* `2.0.0-passenger`, `2.0-passenger`
 * `1.3.0`, `1.3`
 * `1.3.0-alpine`, `1.3-alpine`
 * `1.3.0-passenger`, `1.3-passenger`
