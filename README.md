@@ -8,6 +8,8 @@ This is the Git repo of [RedMica](https://github.com/redmica/redmica) Docker ima
 
 Supported tags.
 
+* `2.1.0`, `2.1`, `latest`
+* `2.1.0-alpine`, `2.1-alpine`
 * `2.0.0`, `2.0`, `latest`
 * `2.0.0-alpine`, `2.0-alpine`
 * `2.0.0-passenger`, `2.0-passenger`
