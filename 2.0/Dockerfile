@@ -44,11 +44,12 @@ RUN set -eux; \
 	chmod 1777 "$HOME"
 
 ENV REDMINE_VERSION 2.0.0
+ENV REDMINE_DOWNLOAD_URL https://github.com/redmica/redmica/archive/v2.0.0.tar.gz
 ENV REDMINE_DOWNLOAD_SHA256 8d9738f1870d525978c01d5e5488a3c4f86190643218c63228cebe09e3142652
 
 RUN set -eux; \
 # if we use wget here, we get certificate issues (https://github.com/docker-library/redmine/pull/249#issuecomment-984176479)
-	curl -fL -o redmine.tar.gz "https://github.com/redmica/redmica/archive/v${REDMINE_VERSION}.tar.gz"; \
+	curl -fL -o redmine.tar.gz "$REDMINE_DOWNLOAD_URL"; \
 	echo "$REDMINE_DOWNLOAD_SHA256 *redmine.tar.gz" | sha256sum -c -; \
 	tar -xf redmine.tar.gz --strip-components=1; \
 	rm redmine.tar.gz files/delete.me log/delete.me; \
@@ -72,10 +73,15 @@ RUN set -eux; \
 		libsqlite3-dev \
 		make \
 		patch \
+		xz-utils \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 	\
 	gosu redmine bundle config --local without 'development test'; \
+# https://github.com/redmine/redmine/commit/23dc108e70a0794f444803ac827a690085dcd557
+# ("gem puma" already exists in the Gemfile, but under "group :test" and we want it all the time)
+	puma="$(grep -E "^[[:space:]]*gem [:'\"]puma['\",[:space:]].*\$" Gemfile)"; \
+	{ echo; echo "$puma"; } | sed -re 's/^[[:space:]]+//' >> Gemfile; \
 # fill up "database.yml" with bogus entries so the redmine Gemfile will pre-install all database adapter dependencies
 # https://github.com/redmine/redmine/blob/e9f9767089a4e3efbd73c35fc55c5c7eb85dd7d3/Gemfile#L50-L79
 	echo '# the following entries only exist to force `bundle install` to pre-install all database adapter dependencies -- they can be safely removed/ignored' > ./config/database.yml; \

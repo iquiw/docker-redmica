@@ -40,10 +40,11 @@ RUN set -eux; \
 	chmod 1777 "$HOME"
 
 ENV REDMINE_VERSION 1.2.2
+ENV REDMINE_DOWNLOAD_URL https://github.com/redmica/redmica/archive/v1.2.2.tar.gz
 ENV REDMINE_DOWNLOAD_SHA256 c876829022ef6a17196d2ea3657b23bd9f2f14e6d2ce240ca14e0dade9d35ad0
 
 RUN set -eux; \
-	wget -O redmine.tar.gz "https://github.com/redmica/redmica/archive/v${REDMINE_VERSION}.tar.gz"; \
+	wget -O redmine.tar.gz "$REDMINE_DOWNLOAD_URL"; \
 	echo "$REDMINE_DOWNLOAD_SHA256 *redmine.tar.gz" | sha256sum -c -; \
 	tar -xf redmine.tar.gz --strip-components=1; \
 	rm redmine.tar.gz files/delete.me log/delete.me; \
@@ -74,6 +75,10 @@ RUN set -eux; \
 	; \
 	\
 	su-exec redmine bundle config --local without 'development test'; \
+# https://github.com/redmine/redmine/commit/23dc108e70a0794f444803ac827a690085dcd557
+# ("gem puma" already exists in the Gemfile, but under "group :test" and we want it all the time)
+	puma="$(grep -E "^[[:space:]]*gem [:'\"]puma['\",[:space:]].*\$" Gemfile)"; \
+	{ echo; echo "$puma"; } | sed -re 's/^[[:space:]]+//' >> Gemfile; \
 # fill up "database.yml" with bogus entries so the redmine Gemfile will pre-install all database adapter dependencies
 # https://github.com/redmine/redmine/blob/e9f9767089a4e3efbd73c35fc55c5c7eb85dd7d3/Gemfile#L50-L79
 	echo '# the following entries only exist to force `bundle install` to pre-install all database adapter dependencies -- they can be safely removed/ignored' > ./config/database.yml; \

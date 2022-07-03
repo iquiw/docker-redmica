@@ -2,10 +2,11 @@
 set -Eeuo pipefail
 
 # see https://www.redmine.org/projects/redmine/wiki/redmineinstall
-defaultRubyVersion='2.7'
+defaultRubyVersion='3.1'
 declare -A rubyVersions=(
-	[1.0]='2.6'
-	[1.1]='2.6'
+	[1.2]='2.7'
+	[1.3]='2.7'
+	[2.0]='2.7'
 )
 
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
@@ -23,50 +24,42 @@ passenger="$(curl -fsSL 'https://rubygems.org/api/v1/gems/passenger.json' | sed 
 
 for version in "${versions[@]}"; do
 	fullVersion=$(sed <<<"$versionsPage" -nr "s/.*($version\.[0-9]+)\.tar\.gz[^.].*/\1/p" | sort -V | tail -1)
+	url="$relasesUrl/v$fullVersion.tar.gz"
 	sha256="$(curl -fsSL "$relasesUrl/v$fullVersion.tar.gz" | sha256sum | cut -d' ' -f1)"
 
 	rubyVersion="${rubyVersions[$version]:-$defaultRubyVersion}"
 
-	echo "$version: $fullVersion (ruby $rubyVersion; passenger $passenger)"
+	text="ruby $rubyVersion"
+	doPassenger=
+	if [ "$version" = '1.2' -o "$version" = '1.3' -o "$version" = '2.0' ]; then
+		text+="; passenger $passenger"
+		doPassenger=1
+	fi
+
+	echo "$version: $fullVersion ($text)"
 
 	commonSedArgs=(
 		-r
 		-e 's/%%REDMINE_VERSION%%/'"$fullVersion"'/'
 		-e 's/%%RUBY_VERSION%%/'"$rubyVersion"'/'
+		-e 's!%%REDMINE_DOWNLOAD_URL%%!'"$url"'!'
 		-e 's/%%REDMINE_DOWNLOAD_SHA256%%/'"$sha256"'/'
 		-e 's/%%REDMINE%%/iquiw\/redmica:'"$version"'/'
-		-e 's/%%PASSENGER_VERSION%%/'"$passenger"'/'
 	)
-	alpineSedArgs=()
-
-	# https://github.com/docker-library/redmine/pull/184
-	# https://www.redmine.org/issues/22481
-	# https://www.redmine.org/issues/30492
-	if [ "$version" = 4.0 ]; then
-		commonSedArgs+=(
-			-e '/ghostscript /d'
-			-e '\!ImageMagick-6/policy\.xml!d'
-		)
-		alpineSedArgs+=(
-			-e 's/imagemagick/imagemagick6/g'
-		)
-	else
-		commonSedArgs+=(
-			-e '/imagemagick-dev/d'
-			-e '/libmagickcore-dev/d'
-			-e '/libmagickwand-dev/d'
-		)
-	fi
 
 	mkdir -p "$version"
 	cp docker-entrypoint.sh "$version/"
 	sed "${commonSedArgs[@]}" Dockerfile-debian.template > "$version/Dockerfile"
 
-	mkdir -p "$version/passenger"
-	sed "${commonSedArgs[@]}" Dockerfile-passenger.template > "$version/passenger/Dockerfile"
+	if [ -n "$doPassenger" ]; then
+		mkdir -p "$version/passenger"
+		sed "${commonSedArgs[@]}" \
+			-e 's/%%PASSENGER_VERSION%%/'"$passenger"'/' \
+			Dockerfile-passenger.template > "$version/passenger/Dockerfile"
+	fi
 
 	mkdir -p "$version/alpine"
 	cp docker-entrypoint.sh "$version/alpine/"
 	sed -i -e 's/gosu/su-exec/g' "$version/alpine/docker-entrypoint.sh"
-	sed "${commonSedArgs[@]}" "${alpineSedArgs[@]}" Dockerfile-alpine.template > "$version/alpine/Dockerfile"
+	sed "${commonSedArgs[@]}" Dockerfile-alpine.template > "$version/alpine/Dockerfile"
 done

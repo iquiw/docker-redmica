@@ -1,6 +1,6 @@
 FROM iquiw/redmica:2.0
 
-ENV PASSENGER_VERSION 6.0.12
+ENV PASSENGER_VERSION 6.0.14
 
 RUN set -eux; \
 	\
